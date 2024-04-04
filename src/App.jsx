@@ -7,21 +7,30 @@ function App() {
   const base_url = import.meta.env.VITE_API_BASE_URL;
   const [message, setMessage] = useState("");
   const [userDetails, setUserDetails] = useState();
+  const [error, setError] = useState();
   console.log("the refresh message => ", message);
   console.log("the userDetails => ", userDetails);
   // axios.get(API_SERVER + '/todos', { withCredentials: true })
   // axios.defaults.withCredentials = true;
   const validResponse = async () => {
-    const response = await axios.get(`${base_url}/auth/validate-token`, {
-      withCredentials: true,
-    });
-    console.log("the response from valid => ", response);
-    if (response?.data?.valid) {
-      setMessage(response.data.message);
-      setUserDetails(response.data.details);
-    }
-    if (!response.data) {
-      setMessage("validation of token did not work");
+    try {
+      const response = await axios.get(`${base_url}/auth/validate-token`, {
+        withCredentials: true,
+      });
+      console.log("the response from valid => ", response);
+      if (response?.data?.valid) {
+        setMessage(response.data.message);
+        setUserDetails(response.data.details);
+      }
+      if (!response.data) {
+        setMessage("validation of token did not work");
+      }
+    } catch (error) {
+      console.log("the validation error => ", error);
+      if (error instanceof axios.AxiosError) {
+        console.log("the error => ", error?.response?.data);
+        setError(error.response.data.valid);
+      }
     }
   };
 
@@ -32,13 +41,14 @@ function App() {
   return (
     <div className="h-screen">
       <p>This is he home page</p>
-      {userDetails === undefined ? (
+      {userDetails === undefined && error !== false && (
         <div>
           <p className="text-blue-500 animate-pulse font-medium text-center my-20">
             Loading...
           </p>
         </div>
-      ) : (
+      )}
+      {userDetails !== undefined && (
         <div>
           <p className="uppercase text-green-500 font-semibold">
             {message && message}
@@ -55,6 +65,7 @@ function App() {
           </div>
         </div>
       )}
+      {error === false && <div>Please login to see</div>}
     </div>
   );
 }
